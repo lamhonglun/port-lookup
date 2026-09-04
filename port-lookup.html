@@ -222,7 +222,7 @@
 </head>
 <body>
   <h1>Tram Port Lookup</h1>
-  <p class="sub">Search by tram number to get the port for router setup. Source: CAN screenshots plus site check 2026-09-04 (tram 150 = port 8303, tram 124 = port 8357).</p>
+  <p class="sub">Search by tram number to get the port for router setup. Source: DTU-Port Forward Setting.xlsx — Table 2 (2026-09-04).</p>
   <div class="badge" id="countBadge">0 trams</div>
 
   <section class="panel">
@@ -246,7 +246,7 @@
     <div id="list"></div>
   </section>
 
-  <p class="footer">Updated 2026-09-04 from CAN1 / CAN2 / CAN3 fleet telemetry, then site check: tram 150 = 8303, tram 124 = 8357. 157 unique trams · 157 ports. Offline field tool.</p>
+  <p class="footer">Updated 2026-09-04 from Excel Table 2 (Tram Port List). 157 unique trams · 157 ports. Site check: tram 150 = 8303, tram 124 = 8357. Offline field tool.</p>
   <div class="toast" id="toast">Copied</div>
 
 <script>
@@ -371,10 +371,10 @@ function fallbackCopy(text) {
 
 function escapeHtml(s) {
   return String(s)
-    .replace(/&/g, "&")
-    .replace(/</g, "<")
-    .replace(/>/g, ">")
-    .replace(/"/g, """)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
 
