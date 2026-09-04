@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#0b3d5c" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Tram Port Lookup</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #071821;
+    color: #f3f8fb;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100%;
+  }
+  body {
+    padding: 14px 14px 28px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.35rem;
+    font-weight: 750;
+  }
+  .sub {
+    margin: 0 0 14px;
+    color: #9bb4c4;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(46,196,182,0.15);
+    color: #2ec4b6;
+    border: 1px solid rgba(46,196,182,0.35);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .panel {
+    background: #0f2a38;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    color: #9bb4c4;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+  }
+  #tramInput {
+    flex: 1;
+    min-width: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 14px 12px;
+    border-radius: 12px;
+    border: 2px solid rgba(46,196,182,0.4);
+    background: #081c27;
+    color: #fff;
+    outline: none;
+  }
+  #tramInput:focus { border-color: #2ec4b6; }
+  #searchBtn {
+    border: 0;
+    border-radius: 12px;
+    background: #2ec4b6;
+    color: #042029;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 0 18px;
+    min-width: 88px;
+    cursor: pointer;
+  }
+  #searchBtn:active { opacity: 0.9; }
+  .hint {
+    margin: 10px 0 0;
+    color: #9bb4c4;
+    font-size: 0.82rem;
+  }
+  #status {
+    min-height: 1.2em;
+    margin: 8px 2px 10px;
+    color: #9bb4c4;
+    font-size: 0.92rem;
+  }
+  #status.err { color: #ff6b6b; }
+  #status.warn { color: #ffb703; }
+  #status.ok { color: #4ade80; }
+  #resultBox { display: none; }
+  #resultBox.show { display: block; }
+  .warn {
+    display: none;
+    background: rgba(255,183,3,0.12);
+    border: 1px solid rgba(255,183,3,0.35);
+    color: #ffd56a;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .warn.show { display: block; }
+  .card {
+    background: linear-gradient(145deg, #115f78, #0a3445);
+    border: 1px solid rgba(46,196,182,0.35);
+    border-radius: 18px;
+    padding: 18px 16px 16px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .card.multi {
+    background: linear-gradient(145deg, #5a4a16, #241f0d);
+    border-color: rgba(255,183,3,0.45);
+  }
+  .lbl {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.72);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .tram {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 4px 0 14px;
+  }
+  .port {
+    font-size: 3.6rem;
+    font-weight: 900;
+    line-height: 1.05;
+    margin: 4px 0 16px;
+    letter-spacing: 1px;
+  }
+  .btn {
+    border: 0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    font-weight: 750;
+    cursor: pointer;
+    width: 100%;
+    background: #fff;
+    color: #0b3d5c;
+  }
+  .btn.copied { background: #4ade80 !important; color: #053b1a !important; }
+  .list-title {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  #list {
+    max-height: 45vh;
+    overflow: auto;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.18);
+    -webkit-overflow-scrolling: touch;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+  }
+  .item:last-child { border-bottom: 0; }
+  .item:active { background: rgba(46,196,182,0.12); }
+  .item .t { font-weight: 750; font-size: 1.05rem; }
+  .item .p {
+    font-weight: 800;
+    color: #2ec4b6;
+    font-size: 1.15rem;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(12px);
+    background: #123;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 12px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 50;
+    max-width: 90vw;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .footer {
+    margin-top: 14px;
+    text-align: center;
+    color: #6f8a9b;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+</style>
+</head>
+<body>
+  <h1>Tram Port Lookup</h1>
+  <p class="sub">Search by tram number to get the port for router setup. Source: CAN screenshots plus site check 2026-09-04 (tram 150 = port 8303, tram 124 = port 8357).</p>
+  <div class="badge" id="countBadge">0 trams</div>
+
+  <section class="panel">
+    <label for="tramInput">Tram Number</label>
+    <div class="row">
+      <input id="tramInput" type="text" inputmode="numeric" enterkeyhint="search"
+             autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="e.g. 123" />
+      <button id="searchBtn" type="button">Search</button>
+    </div>
+    <p class="hint">Type tram number, then press Search. Only the port number is shown.</p>
+  </section>
+
+  <div id="status">Enter a tram number.</div>
+  <div class="warn" id="multiWarn">This tram has more than one port. Confirm which one is correct before setup.</div>
+
+  <div id="resultBox"></div>
+
+  <section class="panel">
+    <h2 class="list-title" id="listTitle">All trams</h2>
+    <div id="list"></div>
+  </section>
+
+  <p class="footer">Updated 2026-09-04 from CAN1 / CAN2 / CAN3 fleet telemetry, then site check: tram 150 = 8303, tram 124 = 8357. 157 unique trams · 157 ports. Offline field tool.</p>
+  <div class="toast" id="toast">Copied</div>
+
+<script>
+/* Public data: tram number and port only */
+var DATA = [{"tram":1,"port":8358},{"tram":2,"port":8280},{"tram":3,"port":8281},{"tram":4,"port":8282},{"tram":5,"port":8333},{"tram":6,"port":8283},{"tram":7,"port":8284},{"tram":8,"port":8285},{"tram":9,"port":8329},{"tram":10,"port":8330},{"tram":11,"port":8230},{"tram":12,"port":8243},{"tram":13,"port":8225},{"tram":14,"port":8288},{"tram":15,"port":8370},{"tram":17,"port":8290},{"tram":18,"port":8361},{"tram":19,"port":8217},{"tram":20,"port":8362},{"tram":21,"port":8214},{"tram":22,"port":8324},{"tram":23,"port":8244},{"tram":24,"port":8335},{"tram":25,"port":8344},{"tram":27,"port":8309},{"tram":28,"port":8363},{"tram":29,"port":8315},{"tram":30,"port":8318},{"tram":31,"port":8310},{"tram":32,"port":8245},{"tram":33,"port":8311},{"tram":34,"port":8338},{"tram":35,"port":8234},{"tram":36,"port":8253},{"tram":37,"port":8339},{"tram":38,"port":8340},{"tram":39,"port":8218},{"tram":40,"port":8254},{"tram":41,"port":8227},{"tram":42,"port":8212},{"tram":43,"port":8316},{"tram":45,"port":8300},{"tram":46,"port":8312},{"tram":47,"port":8352},{"tram":48,"port":8319},{"tram":49,"port":8272},{"tram":51,"port":8346},{"tram":52,"port":8258},{"tram":53,"port":8308},{"tram":54,"port":8259},{"tram":55,"port":8364},{"tram":56,"port":8255},{"tram":57,"port":8263},{"tram":58,"port":8247},{"tram":59,"port":8269},{"tram":60,"port":8236},{"tram":62,"port":8342},{"tram":64,"port":8237},{"tram":65,"port":8242},{"tram":66,"port":8238},{"tram":67,"port":8365},{"tram":68,"port":8336},{"tram":69,"port":8248},{"tram":70,"port":8231},{"tram":72,"port":8322},{"tram":73,"port":8287},{"tram":74,"port":8232},{"tram":75,"port":8366},{"tram":76,"port":8314},{"tram":77,"port":8249},{"tram":78,"port":8295},{"tram":80,"port":8294},{"tram":81,"port":8327},{"tram":82,"port":8367},{"tram":83,"port":8348},{"tram":84,"port":8341},{"tram":86,"port":8313},{"tram":87,"port":8332},{"tram":88,"port":8260},{"tram":89,"port":8354},{"tram":90,"port":8368},{"tram":91,"port":8337},{"tram":92,"port":8347},{"tram":93,"port":8350},{"tram":94,"port":8220},{"tram":95,"port":8275},{"tram":96,"port":8351},{"tram":97,"port":8369},{"tram":98,"port":8278},{"tram":99,"port":8239},{"tram":102,"port":8256},{"tram":103,"port":8320},{"tram":104,"port":8349},{"tram":105,"port":8286},{"tram":106,"port":8213},{"tram":107,"port":8296},{"tram":109,"port":8268},{"tram":110,"port":8355},{"tram":111,"port":8334},{"tram":112,"port":8325},{"tram":114,"port":8291},{"tram":115,"port":8221},{"tram":116,"port":8222},{"tram":117,"port":8219},{"tram":118,"port":8240},{"tram":119,"port":8279},{"tram":120,"port":8372},{"tram":121,"port":8356},{"tram":122,"port":8224},{"tram":123,"port":8211},{"tram":124,"port":8357},{"tram":125,"port":8373},{"tram":126,"port":8250},{"tram":127,"port":8292},{"tram":128,"port":8374},{"tram":129,"port":8233},{"tram":130,"port":8353},{"tram":131,"port":8375},{"tram":132,"port":8262},{"tram":133,"port":8241},{"tram":135,"port":8326},{"tram":136,"port":8317},{"tram":137,"port":8251},{"tram":139,"port":8299},{"tram":140,"port":8289},{"tram":141,"port":8266},{"tram":142,"port":8376},{"tram":143,"port":8235},{"tram":145,"port":8323},{"tram":146,"port":8252},{"tram":147,"port":8301},{"tram":148,"port":8264},{"tram":149,"port":8302},{"tram":150,"port":8303},{"tram":151,"port":8298},{"tram":152,"port":8304},{"tram":153,"port":8271},{"tram":154,"port":8229},{"tram":155,"port":8267},{"tram":156,"port":8305},{"tram":157,"port":8274},{"tram":158,"port":8216},{"tram":159,"port":8306},{"tram":160,"port":8321},{"tram":161,"port":8293},{"tram":162,"port":8223},{"tram":165,"port":8228},{"tram":166,"port":8307},{"tram":168,"port":8378},{"tram":169,"port":8379},{"tram":170,"port":8380},{"tram":171,"port":8270},{"tram":172,"port":8276},{"tram":173,"port":8215},{"tram":174,"port":8265},{"tram":175,"port":8273},{"tram":666,"port":8371}];
+
+function $(id) { return document.getElementById(id); }
+
+var els = {
+  input: $("tramInput"),
+  searchBtn: $("searchBtn"),
+  status: $("status"),
+  multiWarn: $("multiWarn"),
+  resultBox: $("resultBox"),
+  list: $("list"),
+  listTitle: $("listTitle"),
+  countBadge: $("countBadge"),
+  toast: $("toast")
+};
+
+function uniqueCount() {
+  var seen = {};
+  var n = 0;
+  for (var i = 0; i < DATA.length; i++) {
+    var k = String(DATA[i].tram);
+    if (!seen[k]) { seen[k] = 1; n++; }
+  }
+  return n;
+}
+
+els.countBadge.textContent = uniqueCount() + " trams";
+
+function normalizeQuery(q) {
+  q = String(q || "").trim();
+  if (/^0+\d+$/.test(q)) {
+    q = q.replace(/^0+/, "");
+  }
+  return q;
+}
+
+function valOrDash(v) {
+  if (v === null || v === undefined || v === "") return "-";
+  return String(v);
+}
+
+function findByTram(q) {
+  var query = normalizeQuery(q);
+  if (!query) return [];
+  var qLower = query.toLowerCase();
+  var exact = [];
+  var prefix = [];
+  for (var i = 0; i < DATA.length; i++) {
+    var t = String(DATA[i].tram).toLowerCase();
+    if (t === qLower) exact.push(DATA[i]);
+    else if (t.indexOf(qLower) === 0) prefix.push(DATA[i]);
+  }
+  if (exact.length) return exact;
+  return prefix;
+}
+
+function filterList(q) {
+  var query = normalizeQuery(q).toLowerCase();
+  if (!query) return DATA.slice();
+  var out = [];
+  for (var i = 0; i < DATA.length; i++) {
+    var r = DATA[i];
+    var tram = String(r.tram).toLowerCase();
+    var port = String(r.port == null ? "" : r.port);
+    if (tram.indexOf(query) >= 0 || port.indexOf(query) >= 0) out.push(r);
+  }
+  return out;
+}
+
+function showToast(msg) {
+  els.toast.textContent = msg;
+  els.toast.className = "toast show";
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function () {
+    els.toast.className = "toast";
+  }, 1600);
+}
+
+function copyText(text, btn) {
+  text = String(text == null ? "" : text);
+  if (!text || text === "-") return;
+
+  function done() {
+    showToast("Copied: " + text);
+    if (btn) {
+      var old = btn.textContent;
+      btn.className = btn.className + " copied";
+      btn.textContent = "Copied";
+      setTimeout(function () {
+        btn.className = btn.className.replace(" copied", "");
+        btn.textContent = old;
+      }, 1200);
+    }
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(function () {
+      fallbackCopy(text);
+      done();
+    });
+  } else {
+    fallbackCopy(text);
+    done();
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, """)
+    .replace(/'/g, "&#39;");
+}
+
+function renderCards(rows) {
+  els.resultBox.innerHTML = "";
+  if (!rows || !rows.length) {
+    els.resultBox.className = "";
+    els.multiWarn.className = "warn";
+    return;
+  }
+
+  var sameTram = true;
+  var firstTram = String(rows[0].tram);
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i].tram) !== firstTram) { sameTram = false; break; }
+  }
+  var multi = rows.length > 1 && sameTram;
+  els.multiWarn.className = multi ? "warn show" : "warn";
+
+  for (var i = 0; i < rows.length; i++) {
+    (function (r, idx) {
+      var card = document.createElement("div");
+      card.className = multi ? "card multi" : "card";
+      var mapLabel = multi ? ("Mapping " + (idx + 1) + " / Tram") : "Tram number";
+      var portText = valOrDash(r.port);
+
+      card.innerHTML =
+        '<div class="lbl">' + mapLabel + '</div>' +
+        '<div class="tram">' + escapeHtml(String(r.tram)) + '</div>' +
+        '<div class="lbl">Port number</div>' +
+        '<div class="port">' + escapeHtml(portText) + '</div>' +
+        '<button type="button" class="btn">Copy Port</button>';
+
+      var btn = card.getElementsByTagName("button")[0];
+      btn.onclick = function () { copyText(r.port, btn); };
+      els.resultBox.appendChild(card);
+    })(rows[i], i);
+  }
+
+  els.resultBox.className = "show";
+}
+
+function renderList(rows) {
+  var q = normalizeQuery(els.input.value);
+  els.listTitle.textContent = q
+    ? ("Matches (" + rows.length + ")")
+    : ("All trams (" + rows.length + ")");
+  els.list.innerHTML = "";
+
+  if (!rows.length) {
+    els.list.innerHTML = '<div class="item"><div class="t">No results</div></div>';
+    return;
+  }
+
+  for (var i = 0; i < rows.length; i++) {
+    (function (r) {
+      var item = document.createElement("div");
+      item.className = "item";
+      item.innerHTML =
+        '<div class="t">Tram ' + escapeHtml(String(r.tram)) + '</div>' +
+        '<div class="p">Port ' + escapeHtml(valOrDash(r.port)) + '</div>';
+      item.onclick = function () {
+        els.input.value = String(r.tram);
+        doSearch(true);
+        try { window.scrollTo(0, 0); } catch (e) {}
+      };
+      els.list.appendChild(item);
+    })(rows[i]);
+  }
+}
+
+function doSearch(forceSearch) {
+  var q = els.input.value;
+  var query = normalizeQuery(q);
+  var listRows = filterList(q);
+  renderList(listRows);
+
+  if (!query) {
+    els.status.className = "";
+    els.status.textContent = "Enter a tram number.";
+    els.resultBox.className = "";
+    els.resultBox.innerHTML = "";
+    els.multiWarn.className = "warn";
+    return;
+  }
+
+  var rows = findByTram(q);
+  if (!rows.length) {
+    els.status.className = "err";
+    els.status.textContent = "No match for tram " + query + ".";
+    els.resultBox.className = "";
+    els.resultBox.innerHTML = "";
+    els.multiWarn.className = "warn";
+    return;
+  }
+
+  var exact = [];
+  var qLower = query.toLowerCase();
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].tram).toLowerCase() === qLower) exact.push(rows[i]);
+  }
+
+  var show = exact.length ? exact : rows;
+  var tramSet = {};
+  for (var j = 0; j < show.length; j++) tramSet[String(show[j].tram)] = 1;
+  var tramKeys = [];
+  for (var k in tramSet) {
+    if (tramSet.hasOwnProperty(k)) tramKeys.push(k);
+  }
+
+  if (exact.length || tramKeys.length === 1 || forceSearch) {
+    if (forceSearch && !exact.length && tramKeys.length > 1) {
+      if (show.length <= 5) {
+        renderCards(show);
+      } else {
+        els.resultBox.className = "";
+        els.resultBox.innerHTML = "";
+        els.multiWarn.className = "warn";
+      }
+      els.status.className = "warn";
+      els.status.textContent = show.length + " matches. Tap a tram in the list below.";
+      return;
+    }
+
+    renderCards(show);
+    if (exact.length === 1 || (tramKeys.length === 1 && show.length === 1)) {
+      els.status.className = "ok";
+      els.status.textContent = "Tram " + show[0].tram + "  ->  Port " + valOrDash(show[0].port);
+    } else if (exact.length > 1 || (tramKeys.length === 1 && show.length > 1)) {
+      els.status.className = "warn";
+      els.status.textContent = "Tram " + show[0].tram + " has " + show.length + " ports.";
+    } else {
+      els.status.className = "warn";
+      els.status.textContent = show.length + " matches shown.";
+    }
+  } else {
+    els.resultBox.className = "";
+    els.resultBox.innerHTML = "";
+    els.multiWarn.className = "warn";
+    els.status.className = "warn";
+    els.status.textContent = show.length + " matches. Keep typing or tap one in the list.";
+  }
+}
+
+els.searchBtn.onclick = function () { doSearch(true); };
+
+els.input.onkeydown = function (e) {
+  e = e || window.event;
+  var key = e.key || e.keyCode;
+  if (key === "Enter" || key === 13) {
+    if (e.preventDefault) e.preventDefault();
+    doSearch(true);
+    try { els.input.blur(); } catch (err) {}
+  }
+};
+
+els.input.oninput = function () { doSearch(false); };
+
+renderList(DATA);
+els.status.textContent = "Enter a tram number, then press Search.";
+</script>
+</body>
+</html>
